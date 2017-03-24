@@ -1,0 +1,40 @@
+    ul {
+        border-radius:3px;
+        padding-left:5px;
+    }
+
+    li {
+        list-style-type:none;             
+        padding:5px;
+        overflow: hidden;
+        width:auto
+    }
+    .item {
+        text-decoration:none; 
+        font-weight:400; 
+        color:#000;
+        background:#ffed53;
+        display: block;
+        width:150px;
+        overflow: hidden;
+    }
+    .item:hover {background:#069;}
+
+    button {
+        margin:10px
+    }
+
+    input {
+        margin:10px
+    }
+
+    .left {
+        float: left;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .right {
+        float: right;
+        padding-right: 10px
+    }
