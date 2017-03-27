@@ -12,6 +12,7 @@ class Tree extends Component {
         name:"",
         itemId:10,
         select:null,
+        history:[],
         items: [
                {
                    id:"1",
@@ -20,7 +21,7 @@ class Tree extends Component {
                    child:[
                        {
                             id: "2",
-                            name:"bb",
+                            name:"leaf1",
                             show:false,
                             child:[
 
@@ -35,7 +36,7 @@ class Tree extends Component {
                    child:[
                        {
                            id:"4", 
-                            name:"dd",
+                            name:"leaf2",
                             show:false,
                             child:[
 
@@ -50,7 +51,7 @@ class Tree extends Component {
                    child:[
                        {
                            id:"6", 
-                            name:"ee",
+                            name:"leaf3",
                             show:false,
                             child:[
 
@@ -90,26 +91,45 @@ class Tree extends Component {
 
   findName(name){
     this.setState({
-        items: this.traverseDF(this.state.items,"name",name,[],(path,node)=>this.openPaths(path,node))    
+        items: this.traverseDF(this.state.items,"name",name,[],[],(path,node,index,array,history)=>this.nameHander(path,node,history))    
     })  
   } //搜索Name
 
+  nameHander(path,node,history){   
+    this.state.history.forEach((result)=>{
+        let dom = document.getElementById("item"+result.id);
+        if(dom){
+            dom.style.color = ""; 
+        }   
+    })  
+    history.forEach((result)=>{
+        let dom = document.getElementById("item"+result.id);
+        if(dom){
+             dom.style.color="red";
+        }
+    })
+    this.setState({
+        history:history
+    })  
+    this.openPaths(path,node);  
+  }
+
   findState(id){   
      this.setState({
-         items: this.traverseDF(this.state.items,"id",id,[],(path,node)=>this.openPaths(path,node))
+         items: this.traverseDF(this.state.items,"id",id,[],[],(path,node)=>this.openPaths(path,node))
      }) 
   } //搜索节点
 
   closeItem(id){
       this.setState({
-        items: this.traverseDF(this.state.items,"id",id,[],(path,node)=>this.checkNode(node))   
+        items: this.traverseDF(this.state.items,"id",id,[],[],(path,node)=>this.checkNode(node))   
       })
   } //切换ITEM展现
 
   deleteItem(id){ 
     let ids = id.replace("item","")
     this.setState({
-        items: this.traverseDF(this.state.items,"id",ids,[],(path,item,index,array)=>this.deleteNode(item,index,array))   
+        items: this.traverseDF(this.state.items,"id",ids,[],[],(path,item,index,array)=>this.deleteNode(item,index,array))   
       })
   } //删除节点
 
@@ -123,18 +143,20 @@ class Tree extends Component {
     let ids = id.replace("item","")
     this.setState({
         itemId: this.state.itemId+1,
-        items: this.traverseDF(this.state.items,"id",ids,[],(path,item,index,array)=>this.addNode(path,item,newnode))   
+        items: this.traverseDF(this.state.items,"id",ids,[],[],(path,item,index,array)=>this.addNode(path,item,newnode))   
       })
 
   }//添加子节点
 
-  traverseDF(list,key,value,path,callback){
-  
+  traverseDF(list,key,value,path,history,callback){
+    
     if(list){
         list.forEach((item,index,array) => {
             if(key == "name"){
                  if (value.length>0&&item["name"].indexOf(value)>=0){
-                    callback(path,item,index,array)       
+                     console.log(item)
+                     history.push(item)
+                    callback(path,item,index,array,history)       
                 }
             }else{
                  if(item[key] === value){
@@ -144,7 +166,7 @@ class Tree extends Component {
             }
             
             path.push(item)    
-            this.traverseDF(item.child,key,value,path,callback);
+            this.traverseDF(item.child,key,value,path,history,callback);
             path.pop()           
         })
         return list    
@@ -160,16 +182,16 @@ class Tree extends Component {
       const target = document.getElementById(id) 
     if(this.state.select) {
         const old = document.getElementById(this.state.select);
-        if(old) old.setAttribute("style",""); 
+        if(old) old.style.background=""; 
         this.setState({
             select:id
         })         
-        target.setAttribute("style","background:blue");   
+        target.style.background="#99ccff";   
     }else{
         this.setState({
             select:id
         })
-        target.setAttribute("style","background:blue"); 
+        target.style.background="#99ccff"; 
     }                   
   }
 
@@ -197,10 +219,17 @@ class Tree extends Component {
             dom.push(
                  <li key = {items.id}>
                     <div className = "item" id = {"item"+items.id} onClick = {(e)=>this.onCheckItem(e,"item"+items.id)}>
+                        {items.child.length>0?
                         <div className = "left" onClick = {(e)=>this.onItemClick(e,items)}>
-                            {items.show?"-":"+"}
+                           {items.show?<span>-</span>:<span>+</span>}
+                        </div>:
+                        <div className = "left">
+                            <span>&nbsp;</span>
+                        </div>    
+                        }
+                        <div className = "right" >
+                            {items.name}
                         </div>
-                        <div className = "right" >{items.name}</div>
                     </div>
                     {this.renderItems(items.child,items.show)}
                  </li>   
@@ -214,18 +243,25 @@ class Tree extends Component {
   render() {
     return (
       <div>
-          <input type = "text" placeholder="搜索" onChange = {(e)=>{
-              this.findName(e.target.value)
-              this.setState({name:e.target.value})
-          }}></input>
-          <button onClick = {()=> this.addItem(this.state.select,
-              {
-                   name:this.state.name.length==0?"normal":this.state.name,
-              }
-            )}>添加</button>
-          <button onClick = {()=> this.deleteItem(this.state.select)}>删除</button>
-          <p>trees</p>
-          <div id = "lists">
+          <div>
+              <input type = "text" placeholder="搜索节点" onChange = {(e)=>{
+                    this.findName(e.target.value)
+                }}></input>
+              <button onClick = {()=> {
+                  if(this.state.select){
+                      let name = prompt("请输入节点名称",`${this.state.itemId}normal`)
+                      if (name === null) return;
+                      this.addItem(this.state.select,
+                        {
+                            name:name,
+                        }
+                        )
+                    }
+                  }}>添加节点</button>
+
+            <button onClick = {()=> this.deleteItem(this.state.select)}>删除节点</button>
+          </div>
+          <div id = "lists" className = "lists">
             {this.renderItems(this.state.items)}
           </div>  
       </div>
