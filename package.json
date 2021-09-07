@@ -7,6 +7,7 @@
     "react-dom": "^15.4.2"
   },
   "devDependencies": {
+    "@architect/sandbox": "^4.0.2",
     "lodash": "^4.17.4",
     "react-scripts": "0.9.5"
   },
